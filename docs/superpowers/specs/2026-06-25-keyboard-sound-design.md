@@ -91,12 +91,14 @@ macOS에서 **물리 키를 누를 때마다 기계식 키보드 클릭음을 �
 
 `keyCode → group` 매핑 테이블을 보유. (Space=49, Return=36, Delete=51, Tab=48, 화살표 123–126, 모디파이어는 flagsChanged 경로에서 wide 지정)
 
-사전 렌더:
+사전 렌더 (결정적 생성):
 - 그룹별로 **down 변형 N개(기본 6)** + **up 변형 N개**를 init 시 생성하여 `[AVAudioPCMBuffer]`로 보관.
-- `buffer(forKeyCode:phase:)`:
+- 변형 생성에는 **고정 시드(fixed seed)** 기반 의사난수를 사용 → 동일 (파라미터, 시드)이면 항상 동일한 버퍼 집합. (단위 테스트의 재현성 근거)
+
+런타임 선택 (`buffer(forKeyCode:phase:)`, 비-RNG):
   1. keyCode → group
-  2. keyCode 기반 결정적 피치 오프셋(같은 키는 비슷한 톤)
-  3. 변형 인덱스 = keyCode 해시 + 호출 카운터 기반(휴머나이즈), 결정적이되 변화 있음
+  2. keyCode 기반 **결정적** 피치 오프셋(같은 키는 비슷한 톤)
+  3. 변형 인덱스 = `(keyCode + 해당 키의 누름 카운터) % N` — 같은 키를 연속으로 누르면 변형이 순환하여 휴머나이즈. 재생 시점 RNG 없음(저지연·결정적).
   4. 해당 group/phase 변형 버퍼 반환
 
 합성 알고리즘 (down 클릭):
@@ -183,7 +185,8 @@ macOS에서 **물리 키를 누를 때마다 기계식 키보드 클릭음을 �
 - `ClickSoundBankTests`:
   - 버퍼 비어있지 않음 / 길이 예상 범위(ms) / RMS > 0 (무음 아님)
   - keyCode→그룹 매핑: Space/Return/Delete/Tab/화살표 → `wide`, 문자키 → `normal`
-  - 변형 결정성: 같은 (keyCode, phase, seed) → 동일 버퍼
+  - 생성 결정성: 같은 (파라미터, 고정 시드) → 동일한 변형 버퍼 집합
+  - 런타임 변형 순환: 같은 키 연속 누름 시 변형 인덱스가 `(keyCode + 카운터) % N`로 순환
 - `SettingsTests`:
   - UserDefaults 영속화 왕복
   - 프리셋 적용 시 tone/sharpness 기대값 세팅
