@@ -1,4 +1,7 @@
-import Foundation
+import AppKit
 
-// 임시 스텁 — Task 14에서 NSApplication 구동으로 교체
-print("KeyboardSound build OK")
+let app = NSApplication.shared
+let delegate = AppDelegate()
+app.delegate = delegate
+app.setActivationPolicy(.accessory)   // 메뉴바 전용 (Dock 아이콘 없음)
+app.run()
