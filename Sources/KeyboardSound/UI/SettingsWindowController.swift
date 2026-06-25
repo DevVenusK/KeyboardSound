@@ -21,9 +21,13 @@ final class SettingsWindowController {
             win.styleMask = [.titled, .closable]
             win.isReleasedWhenClosed = false
             window = win
+            window?.center()
         }
-        NSApp.activate(ignoringOtherApps: true)
-        window?.center()
+        if #available(macOS 14, *) {
+            NSApp.activate()
+        } else {
+            NSApp.activate(ignoringOtherApps: true)
+        }
         window?.makeKeyAndOrderFront(nil)
     }
 }

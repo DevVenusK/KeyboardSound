@@ -45,7 +45,7 @@ final class StatusMenuController: NSObject, NSMenuDelegate {
             menu.addItem(.separator())
         }
 
-        let toggle = NSMenuItem(title: "소리 켜기", action: #selector(toggleEnabled), keyEquivalent: "")
+        let toggle = NSMenuItem(title: "키보드 소리", action: #selector(toggleEnabled), keyEquivalent: "")
         toggle.target = self
         toggle.state = settings.enabled ? .on : .off
         menu.addItem(toggle)
