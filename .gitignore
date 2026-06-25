@@ -1,0 +1,11 @@
+# Build artifacts
+.build/
+KeyboardSound.app/
+
+# Xcode
+*.xcodeproj
+*.xcworkspace
+.DS_Store
+
+# Swift Package Manager
+.swiftpm/
