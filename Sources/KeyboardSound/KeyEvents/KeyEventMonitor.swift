@@ -14,7 +14,12 @@ final class KeyEventMonitor {
 
     private var tap: CFMachPort?
     private var runLoopSource: CFRunLoopSource?
+    private var runLoop: CFRunLoop?
     private var previousFlags: UInt64 = 0
+
+    deinit {
+        stop()
+    }
 
     @discardableResult
     func start() -> Status {
@@ -47,21 +52,24 @@ final class KeyEventMonitor {
         self.tap = tap
         let source = CFMachPortCreateRunLoopSource(kCFAllocatorDefault, tap, 0)
         self.runLoopSource = source
-        CFRunLoopAddSource(CFRunLoopGetCurrent(), source, .commonModes)
+        let rl = CFRunLoopGetCurrent()
+        CFRunLoopAddSource(rl, source, .commonModes)
+        self.runLoop = rl
         CGEvent.tapEnable(tap: tap, enable: true)
         status = .active
         return status
     }
 
     func stop() {
-        if let source = runLoopSource {
-            CFRunLoopRemoveSource(CFRunLoopGetCurrent(), source, .commonModes)
+        if let source = runLoopSource, let rl = runLoop {
+            CFRunLoopRemoveSource(rl, source, .commonModes)
         }
         if let tap {
             CGEvent.tapEnable(tap: tap, enable: false)
         }
         tap = nil
         runLoopSource = nil
+        runLoop = nil
         status = .inactive
     }
 
