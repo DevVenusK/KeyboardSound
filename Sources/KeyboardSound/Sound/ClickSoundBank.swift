@@ -1,5 +1,8 @@
 import AVFoundation
 
+/// 메인 스레드 전용. `buffer(forKeyCode:phase:)`는 `pressCounters`를 변경하고
+/// `regenerate(...)`는 `buffers`를 교체하므로, 두 메서드 모두 메인 스레드에서만 호출해야 한다.
+///
 /// 그룹/페이즈별 변형 버퍼를 사전 렌더하고, keyCode로 적절한 버퍼를 선택한다.
 final class ClickSoundBank {
     private let format: AVAudioFormat

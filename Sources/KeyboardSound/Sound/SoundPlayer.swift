@@ -5,6 +5,9 @@ protocol SoundPlaying: AnyObject {
     func play(_ buffer: AVAudioPCMBuffer, volume: Float)
 }
 
+/// 메인 스레드 전용. `play(_:volume:)`는 락 없이 `nextIndex`/노드 상태를 변경하므로
+/// 반드시 메인 스레드(메인 런루프의 CGEventTap 콜백 경로)에서만 호출해야 한다.
+///
 /// AVAudioEngine + 플레이어 노드 풀(라운드로빈)로 겹치는 클릭음을 저지연 재생.
 final class SoundPlayer: SoundPlaying {
     let format: AVAudioFormat

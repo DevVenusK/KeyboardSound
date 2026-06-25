@@ -8,6 +8,8 @@
 ./scripts/build-app.sh
 ```
 
+스크립트는 저장소 루트에서 실행하세요.
+
 ## 실행
 
 ```bash

@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
+cd "$(dirname "$0")/.."
 
 APP_NAME="KeyboardSound"
 BUNDLE_ID="com.keyboardsound.app"
