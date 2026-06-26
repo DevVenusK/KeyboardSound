@@ -41,3 +41,35 @@ private let params = SoundParameters(toneFrequency: 2000, sharpness: 0.7,
         #expect(v >= -1.0 && v <= 1.0)
     }
 }
+
+@Test func clickAmountChangesOutput() {
+    let synth = ClickSynth(sampleRate: 44100)
+    let base = SoundParameters(toneFrequency: 2000, sharpness: 0.7, decayTime: 0.05,
+                               bodyMix: 0.4, humanization: 0.2, clickAmount: 0.0)
+    let clicky = SoundParameters(toneFrequency: 2000, sharpness: 0.7, decayTime: 0.05,
+                                 bodyMix: 0.4, humanization: 0.2, clickAmount: 0.9)
+    let a = synth.render(parameters: base, phase: .down, pitchMultiplier: 1.0, seed: 7)
+    let b = synth.render(parameters: clicky, phase: .down, pitchMultiplier: 1.0, seed: 7)
+    #expect(a != b)
+}
+
+@Test func clickAddsEarlyEnergy() {
+    let synth = ClickSynth(sampleRate: 44100)
+    let base = SoundParameters(toneFrequency: 2000, sharpness: 0.7, decayTime: 0.05,
+                               bodyMix: 0.4, humanization: 0.2, clickAmount: 0.0)
+    let clicky = SoundParameters(toneFrequency: 2000, sharpness: 0.7, decayTime: 0.05,
+                                 bodyMix: 0.4, humanization: 0.2, clickAmount: 0.9)
+    let a = synth.render(parameters: base, phase: .down, pitchMultiplier: 1.0, seed: 7)
+    let b = synth.render(parameters: clicky, phase: .down, pitchMultiplier: 1.0, seed: 7)
+    let window = min(220, a.count)   // 첫 ~5ms
+    func energy(_ s: ArraySlice<Float>) -> Double { s.reduce(0) { $0 + Double($1 * $1) } }
+    #expect(energy(b[0..<window]) > energy(a[0..<window]))
+}
+
+@Test func outputBoundedWithMaxClick() {
+    let synth = ClickSynth(sampleRate: 44100)
+    let p = SoundParameters(toneFrequency: 2000, sharpness: 0.7, decayTime: 0.05,
+                            bodyMix: 0.4, humanization: 0.2, clickAmount: 1.0)
+    let s = synth.render(parameters: p, phase: .down, pitchMultiplier: 1.0, seed: 3)
+    for v in s { #expect(v.isFinite && v >= -1.0 && v <= 1.0) }
+}
