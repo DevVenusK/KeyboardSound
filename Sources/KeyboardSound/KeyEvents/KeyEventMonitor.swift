@@ -119,7 +119,7 @@ final class KeyEventMonitor {
             previousFlags = currentFlags
         }
         if let result {
-            eventLog.notice("event keyCode=\(result.keyCode, privacy: .public) phase=\(result.phase == .down ? "down" : "up", privacy: .public)")
+            eventLog.debug("event keyCode=\(result.keyCode, privacy: .public) phase=\(result.phase == .down ? "down" : "up", privacy: .public)")
             onEvent?(result)
         }
     }

@@ -60,6 +60,6 @@ final class SoundPlayer: SoundPlaying {
         node.volume = max(0, min(1, volume))
         if !node.isPlaying { node.play() }
         node.scheduleBuffer(buffer, at: nil, options: [], completionHandler: nil)
-        audioLog.notice("play wasRunning=\(wasRunning, privacy: .public) vol=\(volume, privacy: .public) len=\(buffer.frameLength, privacy: .public)")
+        audioLog.debug("play wasRunning=\(wasRunning, privacy: .public) vol=\(volume, privacy: .public) len=\(buffer.frameLength, privacy: .public)")
     }
 }
