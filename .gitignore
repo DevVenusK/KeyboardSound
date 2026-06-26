@@ -9,3 +9,6 @@ KeyboardSound.app/
 
 # Swift Package Manager
 .swiftpm/
+
+# Superpowers SDD scratch (briefs, reports, review diffs, ledger)
+.superpowers/
