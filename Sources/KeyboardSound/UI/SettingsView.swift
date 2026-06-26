@@ -29,8 +29,13 @@ struct SettingsView: View {
             slider("볼륨", value: Binding(get: { settings.volume }, set: { settings.volume = $0 }))
             slider("톤",   value: Binding(get: { settings.tone }, set: { settings.tone = $0 }))
             slider("샤프함", value: Binding(get: { settings.sharpness }, set: { settings.sharpness = $0 }))
+            slider("무게",  value: Binding(get: { settings.weight }, set: { settings.weight = $0 }))
+            slider("울림",  value: Binding(get: { settings.ring }, set: { settings.ring = $0 }))
 
-            Button("테스트 소리", action: onTest)
+            HStack {
+                Button("테스트 소리", action: onTest)
+                Button("값 초기화") { settings.resetCurrentSwitch() }
+            }
         }
         .padding(20)
         .frame(width: 320)

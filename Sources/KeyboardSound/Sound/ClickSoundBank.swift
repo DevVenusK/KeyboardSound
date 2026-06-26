@@ -12,29 +12,31 @@ final class ClickSoundBank {
     private var buffers: [KeyGroup: [KeyPhase: [AVAudioPCMBuffer]]] = [:]
     private var pressCounters: [Int: Int] = [:]
 
-    init(format: AVAudioFormat, tone: Double, sharpness: Double, preset: Preset, variantCount: Int = 6) {
+    init(format: AVAudioFormat, tone: Double, sharpness: Double, weight: Double = 0.5, ring: Double = 0.5, preset: Preset, variantCount: Int = 6) {
         self.format = format
         self.sampleRate = format.sampleRate
         self.variantCount = max(1, variantCount)
-        regenerate(tone: tone, sharpness: sharpness, preset: preset)
+        regenerate(tone: tone, sharpness: sharpness, weight: weight, ring: ring, preset: preset)
     }
 
     /// 파라미터 변경 시 전체 버퍼 재생성.
-    func regenerate(tone: Double, sharpness: Double, preset: Preset) {
+    func regenerate(tone: Double, sharpness: Double, weight: Double = 0.5, ring: Double = 0.5, preset: Preset) {
+        let ringMul = SoundParameterMapping.decayMultiplier(ring: ring)
         let synth = ClickSynth(sampleRate: sampleRate)
         var newBuffers: [KeyGroup: [KeyPhase: [AVAudioPCMBuffer]]] = [:]
 
         for group in [KeyGroup.normal, .wide] {
             let toneFreq = SoundParameterMapping.toneFrequency(tone: tone, group: group)
-            // wide 키(스페이스 등)는 더 묵직하고 긴 감쇠 → decay 1.5배 적용
-            let decayMultiplier = group == .wide ? 1.5 : 1.0
+            // wide 키(스페이스 등)는 더 묵직하고 긴 감쇠 → 1.5배. ring 슬라이더 배수도 함께 적용.
+            let wideMultiplier = group == .wide ? 1.5 : 1.0
             let params = SoundParameters(
                 toneFrequency: toneFreq,
                 sharpness: sharpness,
-                decayTime: preset.decayTime * decayMultiplier,
+                decayTime: preset.decayTime * ringMul * wideMultiplier,
                 bodyMix: preset.bodyMix,
                 humanization: preset.humanization,
-                clickAmount: preset.clickAmount
+                clickAmount: preset.clickAmount,
+                weight: weight
             )
 
             var byPhase: [KeyPhase: [AVAudioPCMBuffer]] = [:]

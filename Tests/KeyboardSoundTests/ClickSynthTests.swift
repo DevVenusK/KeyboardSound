@@ -53,7 +53,10 @@ private let params = SoundParameters(toneFrequency: 2000, sharpness: 0.7,
     #expect(a != b)
 }
 
-@Test func clickAddsEarlyEnergy() {
+@Test func clickAddsHighFrequencyContent() {
+    // 합성기가 피크 정규화를 하므로 "절대 에너지 증가"는 불변량이 아니다.
+    // 대신 클릭 자켓(~5kHz 버스트)이 고주파 함량을 높인다는 정규화-불변 속성을 검증한다.
+    // HF 비율 = Σ(1차 차분²)/Σ(샘플²) — 분자·분모가 같은 정규화 계수로 스케일되어 불변.
     let synth = ClickSynth(sampleRate: 44100)
     let base = SoundParameters(toneFrequency: 2000, sharpness: 0.7, decayTime: 0.05,
                                bodyMix: 0.4, humanization: 0.2, clickAmount: 0.0)
@@ -61,9 +64,16 @@ private let params = SoundParameters(toneFrequency: 2000, sharpness: 0.7,
                                  bodyMix: 0.4, humanization: 0.2, clickAmount: 0.9)
     let a = synth.render(parameters: base, phase: .down, pitchMultiplier: 1.0, seed: 7)
     let b = synth.render(parameters: clicky, phase: .down, pitchMultiplier: 1.0, seed: 7)
-    let window = min(220, a.count)   // 첫 ~5ms
-    func energy(_ s: ArraySlice<Float>) -> Double { s.reduce(0) { $0 + Double($1 * $1) } }
-    #expect(energy(b[0..<window]) > energy(a[0..<window]))
+    let window = min(220, a.count, b.count)   // 첫 ~5ms
+    func hfRatio(_ s: [Float]) -> Double {
+        var diff = 0.0, energy = 0.0
+        for i in 1..<window {
+            let d = Double(s[i] - s[i - 1]); diff += d * d
+            energy += Double(s[i] * s[i])
+        }
+        return energy > 0 ? diff / energy : 0
+    }
+    #expect(hfRatio(b) > hfRatio(a))
 }
 
 @Test func outputBoundedWithMaxClick() {

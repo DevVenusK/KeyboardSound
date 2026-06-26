@@ -60,3 +60,27 @@ private func freshDefaults() -> UserDefaults {
     #expect(s.selectedSwitchID == "topre")
     #expect(abs(s.tone - 0.27) < 0.0001)
 }
+
+@Test func weightAndRingRememberedPerSwitch() {
+    let s = Settings(defaults: freshDefaults())
+    s.selectSwitch(.blue)
+    s.weight = 0.8
+    s.ring = 0.2
+    s.selectSwitch(.red)                                   // red 기본값(중립)
+    #expect(abs(s.weight - Settings.neutralWeight) < 0.0001)
+    #expect(abs(s.ring - Settings.neutralRing) < 0.0001)
+    s.selectSwitch(.blue)                                  // blue 조정값 복원
+    #expect(abs(s.weight - 0.8) < 0.0001)
+    #expect(abs(s.ring - 0.2) < 0.0001)
+}
+
+@Test func resetRestoresSwitchDefaults() {
+    let s = Settings(defaults: freshDefaults())
+    s.selectSwitch(.topre)
+    s.tone = 0.1; s.sharpness = 0.9; s.weight = 0.2; s.ring = 0.8
+    s.resetCurrentSwitch()
+    #expect(abs(s.tone - Preset.topre.tone) < 0.0001)
+    #expect(abs(s.sharpness - Preset.topre.sharpness) < 0.0001)
+    #expect(abs(s.weight - Settings.neutralWeight) < 0.0001)
+    #expect(abs(s.ring - Settings.neutralRing) < 0.0001)
+}

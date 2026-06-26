@@ -31,6 +31,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         bank = ClickSoundBank(format: player.format,
                               tone: settings.tone,
                               sharpness: settings.sharpness,
+                              weight: settings.weight,
+                              ring: settings.ring,
                               preset: settings.currentSwitch)
         controller = KeySoundController(settings: settings, bank: bank, player: player)
         monitor.onEvent = { [weak self] event in self?.controller.handle(event) }
@@ -44,9 +46,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             onOpenPermission: { InputPermissions.openSettings() }
         )
 
-        // 톤/샤프함/프리셋 변경 → 뱅크 재생성
-        settings.$tone
-            .combineLatest(settings.$sharpness, settings.$selectedSwitchID)
+        // 톤/샤프함/무게/울림/스위치 변경 → 뱅크 재생성. 5개 신호를 Void로 병합 후 디바운스.
+        let changeSignals: [AnyPublisher<Void, Never>] = [
+            settings.$tone.map { _ in () }.eraseToAnyPublisher(),
+            settings.$sharpness.map { _ in () }.eraseToAnyPublisher(),
+            settings.$weight.map { _ in () }.eraseToAnyPublisher(),
+            settings.$ring.map { _ in () }.eraseToAnyPublisher(),
+            settings.$selectedSwitchID.map { _ in () }.eraseToAnyPublisher(),
+        ]
+        Publishers.MergeMany(changeSignals)
             .dropFirst()
             .debounce(for: .milliseconds(80), scheduler: RunLoop.main)
             .sink { [weak self] _ in self?.regenerateBank() }
@@ -66,7 +74,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func regenerateBank() {
-        bank.regenerate(tone: settings.tone, sharpness: settings.sharpness, preset: settings.currentSwitch)
+        bank.regenerate(tone: settings.tone, sharpness: settings.sharpness, weight: settings.weight, ring: settings.ring, preset: settings.currentSwitch)
     }
 
     private func setEnabled(_ enabled: Bool) {

@@ -27,10 +27,16 @@ struct Preset: Equatable, Identifiable {
 /// tone/sharpness 슬라이더(0...1) → 합성 파라미터 변환.
 enum SoundParameterMapping {
     /// tone 슬라이더(0...1)를 로그 스케일 주파수로. wide 그룹은 한 옥타브 낮춤.
+    /// 범위 확대(260~6800Hz): 더 묵직한 저역 ~ 더 밝은 고역까지 폭넓게.
     static func toneFrequency(tone: Double, group: KeyGroup) -> Double {
-        let minHz = 600.0
-        let maxHz = 4000.0
+        let minHz = 260.0
+        let maxHz = 6800.0
         let base = minHz * pow(maxHz / minHz, max(0, min(1, tone)))
         return group == .wide ? base * 0.5 : base
+    }
+
+    /// 울림(ring) 슬라이더(0...1)를 decayTime 배수로. 0.5=1.0×(중립), 0→0.45×(짧고 둔탁), 1→2.2×(길고 울림).
+    static func decayMultiplier(ring: Double) -> Double {
+        0.45 * pow(2.2 / 0.45, max(0, min(1, ring)))
     }
 }
