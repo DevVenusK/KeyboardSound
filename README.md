@@ -2,6 +2,16 @@
 
 맥에서 키 입력마다 합성된 기계식 키보드 타건음을 내는 메뉴바 앱. 청축/갈축/적축/토프레 스위치를 절차적으로 재현합니다.
 
+## 설치 (Homebrew)
+
+```bash
+brew tap DevVenusK/keyboardsound
+brew trust devvenusk/keyboardsound   # Homebrew 6.0+ 서드파티 탭 신뢰
+brew install --cask keyboardsound
+```
+
+설치 후 **시스템 설정 > 개인정보 보호 및 보안 > 입력 모니터링**에서 KeyboardSound를 허용하세요. 이 빌드는 공증되지 않아 첫 실행 시 Gatekeeper 경고가 뜰 수 있습니다 — Finder에서 앱 우클릭 → 열기, 또는 `xattr -dr com.apple.quarantine /Applications/KeyboardSound.app`.
+
 ## 빌드
 
 ```bash
