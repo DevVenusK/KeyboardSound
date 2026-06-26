@@ -24,3 +24,10 @@ import Testing
     let wide = SoundParameterMapping.toneFrequency(tone: 0.5, group: .wide)
     #expect(wide < normal)
 }
+
+@Test func clickyHasClickOthersDont() {
+    #expect(Preset.clicky.clickAmount > 0)
+    #expect(Preset.tactile.clickAmount == 0)
+    #expect(Preset.linear.clickAmount == 0)
+    #expect(Preset.thock.clickAmount == 0)
+}

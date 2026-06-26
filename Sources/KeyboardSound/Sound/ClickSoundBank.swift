@@ -33,7 +33,8 @@ final class ClickSoundBank {
                 sharpness: sharpness,
                 decayTime: preset.decayTime * decayMultiplier,
                 bodyMix: preset.bodyMix,
-                humanization: preset.humanization
+                humanization: preset.humanization,
+                clickAmount: preset.clickAmount
             )
 
             var byPhase: [KeyPhase: [AVAudioPCMBuffer]] = [:]

@@ -10,11 +10,12 @@ struct Preset: Equatable, Identifiable {
     let decayTime: Double
     let bodyMix: Double
     let humanization: Double
+    let clickAmount: Double
 
-    static let clicky  = Preset(id: "clicky",  name: "Clicky",  tone: 0.78, sharpness: 0.85, decayTime: 0.045, bodyMix: 0.25, humanization: 0.15)
-    static let tactile = Preset(id: "tactile", name: "Tactile", tone: 0.55, sharpness: 0.60, decayTime: 0.060, bodyMix: 0.45, humanization: 0.20)
-    static let linear  = Preset(id: "linear",  name: "Linear",  tone: 0.50, sharpness: 0.35, decayTime: 0.050, bodyMix: 0.55, humanization: 0.15)
-    static let thock   = Preset(id: "thock",   name: "Thock",   tone: 0.25, sharpness: 0.30, decayTime: 0.090, bodyMix: 0.70, humanization: 0.25)
+    static let clicky  = Preset(id: "clicky",  name: "Clicky",  tone: 0.78, sharpness: 0.85, decayTime: 0.045, bodyMix: 0.25, humanization: 0.15, clickAmount: 0.80)
+    static let tactile = Preset(id: "tactile", name: "Tactile", tone: 0.55, sharpness: 0.60, decayTime: 0.060, bodyMix: 0.45, humanization: 0.20, clickAmount: 0.00)
+    static let linear  = Preset(id: "linear",  name: "Linear",  tone: 0.50, sharpness: 0.35, decayTime: 0.050, bodyMix: 0.55, humanization: 0.15, clickAmount: 0.00)
+    static let thock   = Preset(id: "thock",   name: "Thock",   tone: 0.25, sharpness: 0.30, decayTime: 0.090, bodyMix: 0.70, humanization: 0.25, clickAmount: 0.00)
 
     static let all: [Preset] = [.clicky, .tactile, .linear, .thock]
 

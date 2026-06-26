@@ -44,3 +44,20 @@ private func makeBank() -> ClickSoundBank {
     let buf = bank.buffer(forKeyCode: 0, phase: .down)
     #expect(buf.frameLength > 0)
 }
+
+@Test func clickAmountPropagatesToBuffers() {
+    let format = AVAudioFormat(standardFormatWithSampleRate: 44100, channels: 2)!
+    let noClick = Preset(id: "x", name: "x", tone: 0.6, sharpness: 0.7,
+                         decayTime: 0.05, bodyMix: 0.4, humanization: 0.0, clickAmount: 0.0)
+    let withClick = Preset(id: "y", name: "y", tone: 0.6, sharpness: 0.7,
+                           decayTime: 0.05, bodyMix: 0.4, humanization: 0.0, clickAmount: 0.9)
+    let a = ClickSoundBank(format: format, tone: 0.6, sharpness: 0.7, preset: noClick, variantCount: 1)
+    let b = ClickSoundBank(format: format, tone: 0.6, sharpness: 0.7, preset: withClick, variantCount: 1)
+    let bufA = a.buffer(forKeyCode: 0, phase: .down)
+    let bufB = b.buffer(forKeyCode: 0, phase: .down)
+    // 첫 샘플 구간이 클릭 유무로 달라져야 한다.
+    let n = min(Int(bufA.frameLength), Int(bufB.frameLength), 220)
+    var differs = false
+    for i in 0..<n where bufA.floatChannelData![0][i] != bufB.floatChannelData![0][i] { differs = true; break }
+    #expect(differs)
+}
