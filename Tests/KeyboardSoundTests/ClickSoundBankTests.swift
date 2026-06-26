@@ -4,7 +4,7 @@ import AVFoundation
 
 private func makeBank() -> ClickSoundBank {
     let format = AVAudioFormat(standardFormatWithSampleRate: 44100, channels: 2)!
-    return ClickSoundBank(format: format, tone: 0.6, sharpness: 0.7, preset: .clicky, variantCount: 6)
+    return ClickSoundBank(format: format, tone: 0.6, sharpness: 0.7, preset: .blue, variantCount: 6)
 }
 
 @Test func bufferIsNonEmpty() {
@@ -40,7 +40,7 @@ private func makeBank() -> ClickSoundBank {
 
 @Test func regenerateKeepsBufferUsable() {
     let bank = makeBank()
-    bank.regenerate(tone: 0.2, sharpness: 0.3, preset: .thock)
+    bank.regenerate(tone: 0.2, sharpness: 0.3, preset: .topre)
     let buf = bank.buffer(forKeyCode: 0, phase: .down)
     #expect(buf.frameLength > 0)
 }

@@ -1,16 +1,16 @@
 import Testing
 @testable import KeyboardSound
 
-@Test func fourBuiltInPresets() {
+@Test func fourSwitchPresets() {
     #expect(Preset.all.count == 4)
-    #expect(Preset.with(id: "clicky") == .clicky)
-    #expect(Preset.with(id: "thock") == .thock)
+    #expect(Preset.with(id: "blue") == .blue)
+    #expect(Preset.with(id: "topre") == .topre)
     #expect(Preset.with(id: "nope") == nil)
 }
 
-@Test func clickyBrighterThanThock() {
-    #expect(Preset.clicky.tone > Preset.thock.tone)
-    #expect(Preset.clicky.sharpness > Preset.thock.sharpness)
+@Test func blueBrighterThanTopre() {
+    #expect(Preset.blue.tone > Preset.topre.tone)
+    #expect(Preset.blue.sharpness > Preset.topre.sharpness)
 }
 
 @Test func higherToneSliderGivesHigherFrequency() {
@@ -25,9 +25,9 @@ import Testing
     #expect(wide < normal)
 }
 
-@Test func clickyHasClickOthersDont() {
-    #expect(Preset.clicky.clickAmount > 0)
-    #expect(Preset.tactile.clickAmount == 0)
-    #expect(Preset.linear.clickAmount == 0)
-    #expect(Preset.thock.clickAmount == 0)
+@Test func onlyBlueClicks() {
+    #expect(Preset.blue.clickAmount > 0)
+    #expect(Preset.brown.clickAmount == 0)
+    #expect(Preset.red.clickAmount == 0)
+    #expect(Preset.topre.clickAmount == 0)
 }

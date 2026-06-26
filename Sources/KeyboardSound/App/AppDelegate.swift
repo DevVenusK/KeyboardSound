@@ -31,7 +31,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         bank = ClickSoundBank(format: player.format,
                               tone: settings.tone,
                               sharpness: settings.sharpness,
-                              preset: settings.currentPreset)
+                              preset: settings.currentSwitch)
         controller = KeySoundController(settings: settings, bank: bank, player: player)
         monitor.onEvent = { [weak self] event in self?.controller.handle(event) }
 
@@ -46,7 +46,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         // 톤/샤프함/프리셋 변경 → 뱅크 재생성
         settings.$tone
-            .combineLatest(settings.$sharpness, settings.$presetID)
+            .combineLatest(settings.$sharpness, settings.$selectedSwitchID)
             .dropFirst()
             .debounce(for: .milliseconds(80), scheduler: RunLoop.main)
             .sink { [weak self] _ in self?.regenerateBank() }
@@ -66,7 +66,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func regenerateBank() {
-        bank.regenerate(tone: settings.tone, sharpness: settings.sharpness, preset: settings.currentPreset)
+        bank.regenerate(tone: settings.tone, sharpness: settings.sharpness, preset: settings.currentSwitch)
     }
 
     private func setEnabled(_ enabled: Bool) {

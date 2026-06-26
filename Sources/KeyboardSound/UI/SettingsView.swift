@@ -14,24 +14,21 @@ struct SettingsView: View {
             Text("KeyboardSound")
                 .font(.headline)
 
-            Picker("프리셋", selection: Binding(
-                get: { settings.presetID },
+            Picker("스위치", selection: Binding(
+                get: { settings.selectedSwitchID },
                 set: { id in
-                    if let preset = Preset.with(id: id) { settings.applyPreset(preset) }
+                    if let preset = Preset.with(id: id) { settings.selectSwitch(preset) }
                 }
             )) {
                 ForEach(Preset.all) { preset in
                     Text(preset.name).tag(preset.id)
                 }
-                if settings.presetID == "custom" {
-                    Text("Custom").tag("custom")
-                }
             }
             .pickerStyle(.segmented)
 
             slider("볼륨", value: Binding(get: { settings.volume }, set: { settings.volume = $0 }))
-            slider("톤",   value: Binding(get: { settings.tone }, set: { settings.userAdjustedTone($0) }))
-            slider("샤프함", value: Binding(get: { settings.sharpness }, set: { settings.userAdjustedSharpness($0) }))
+            slider("톤",   value: Binding(get: { settings.tone }, set: { settings.tone = $0 }))
+            slider("샤프함", value: Binding(get: { settings.sharpness }, set: { settings.sharpness = $0 }))
 
             Button("테스트 소리", action: onTest)
         }

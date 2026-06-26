@@ -16,7 +16,7 @@ private func makeController(enabled: Bool, volume: Double) -> (KeySoundControlle
     settings.enabled = enabled
     settings.volume = volume
     let format = AVAudioFormat(standardFormatWithSampleRate: 44100, channels: 2)!
-    let bank = ClickSoundBank(format: format, tone: 0.6, sharpness: 0.7, preset: .clicky)
+    let bank = ClickSoundBank(format: format, tone: 0.6, sharpness: 0.7, preset: .blue)
     let spy = SpyPlayer()
     return (KeySoundController(settings: settings, bank: bank, player: spy), spy, settings)
 }

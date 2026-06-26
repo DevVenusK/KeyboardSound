@@ -55,7 +55,7 @@ final class StatusMenuController: NSObject, NSMenuDelegate {
             let item = NSMenuItem(title: preset.name, action: #selector(selectPreset(_:)), keyEquivalent: "")
             item.target = self
             item.representedObject = preset.id
-            item.state = (settings.presetID == preset.id) ? .on : .off
+            item.state = (settings.selectedSwitchID == preset.id) ? .on : .off
             presetMenu.addItem(item)
         }
         let presetParent = NSMenuItem(title: "프리셋", action: nil, keyEquivalent: "")
@@ -75,7 +75,7 @@ final class StatusMenuController: NSObject, NSMenuDelegate {
     @objc private func toggleEnabled() { settings.enabled.toggle(); rebuild() }
     @objc private func selectPreset(_ sender: NSMenuItem) {
         if let id = sender.representedObject as? String, let preset = Preset.with(id: id) {
-            settings.applyPreset(preset)
+            settings.selectSwitch(preset)
         }
         rebuild()
     }
