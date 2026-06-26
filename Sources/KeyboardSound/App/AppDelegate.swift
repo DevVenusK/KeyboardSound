@@ -1,5 +1,8 @@
 import AppKit
 import Combine
+import os
+
+private let appLog = Logger(subsystem: "com.keyboardsound.app", category: "app")
 
 final class AppDelegate: NSObject, NSApplicationDelegate {
     private let settings = Settings()
@@ -13,8 +16,18 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     private var cancellables = Set<AnyCancellable>()
     private var permissionTimer: Timer?
+    private var activityToken: NSObjectProtocol?
+    private var lastInputMonitoringGranted = false
 
     func applicationDidFinishLaunching(_ notification: Notification) {
+        // App Nap 방지: 메뉴바 전용 앱이 백그라운드에서 잠들면 메인 런루프가 멈춰
+        // CGEventTap이 죽는다. 토큰을 앱 수명 동안 유지해 항상 깨어있게 한다.
+        // (시스템 유휴 잠자기는 허용 — 키보드 사운드 앱이 맥을 깨워둘 이유는 없음)
+        activityToken = ProcessInfo.processInfo.beginActivity(
+            options: .userInitiatedAllowingIdleSystemSleep,
+            reason: "Global keyboard sound playback"
+        )
+
         bank = ClickSoundBank(format: player.format,
                               tone: settings.tone,
                               sharpness: settings.sharpness,
@@ -28,7 +41,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         menuController = StatusMenuController(
             settings: settings,
             onOpenSettings: { [weak self] in self?.settingsWindow.show() },
-            onOpenPermission: { AccessibilityPermission.openSettings() }
+            onOpenPermission: { InputPermissions.openSettings() }
         )
 
         // 톤/샤프함/프리셋 변경 → 뱅크 재생성
@@ -44,10 +57,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             .sink { [weak self] enabled in self?.setEnabled(enabled) }
             .store(in: &cancellables)
 
-        if !AccessibilityPermission.isTrusted {
-            AccessibilityPermission.promptIfNeeded()
+        if !InputPermissions.isInputMonitoringGranted {
+            InputPermissions.requestInputMonitoring()
         }
         setEnabled(settings.enabled)
+        lastInputMonitoringGranted = InputPermissions.isInputMonitoringGranted
         startPermissionWatcher()
     }
 
@@ -57,29 +71,41 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     private func setEnabled(_ enabled: Bool) {
         if enabled {
-            try? player.start()
+            let audioOK = player.start()
             let status = monitor.start()
-            menuController?.setPermissionDenied(status == .permissionDenied)
+            let granted = InputPermissions.isInputMonitoringGranted
+            // 탭 생성 성공(.active)이어도 입력 모니터링 권한이 없으면 keyDown은 안 들어온다(거짓 양성).
+            // 실제 동작 여부는 탭 상태가 아니라 권한으로 판정한다.
+            appLog.notice("setEnabled(true) inputMonitoring=\(granted, privacy: .public) audioStart=\(audioOK, privacy: .public) tapStatus=\(String(describing: status), privacy: .public)")
+            menuController?.setPermissionDenied(!granted)
         } else {
+            appLog.notice("setEnabled(false)")
             monitor.stop()
             player.stop()
         }
     }
 
     private func playTestSound() {
-        guard settings.enabled, AccessibilityPermission.isTrusted else { return }
+        // 테스트 소리는 오디오 버퍼 재생일 뿐 키 이벤트와 무관하므로 권한 게이팅이 필요 없다.
+        guard settings.enabled else { return }
         controller.handle(KeyEvent(keyCode: 0, phase: .down))
     }
 
-    /// 미허가 동안 권한을 폴링해 부여되면 자동 활성화.
+    /// 미허가 동안 입력 모니터링 권한을 폴링하고, 부여되는 순간 탭을 재생성한다.
     private func startPermissionWatcher() {
         permissionTimer = Timer.scheduledTimer(withTimeInterval: 2.0, repeats: true) { [weak self] _ in
             guard let self else { return }
-            let denied = !AccessibilityPermission.isTrusted
-            self.menuController?.setPermissionDenied(denied)
-            if !denied, self.settings.enabled, self.monitor.status != .active {
-                _ = self.monitor.start()
+            let granted = InputPermissions.isInputMonitoringGranted
+            self.menuController?.setPermissionDenied(!granted)
+
+            // 권한이 막 부여된 순간: 권한 없이 만들어졌던 탭은 keyDown을 못 받는 거짓 양성
+            // (.active)이므로, 탭을 stop→start로 재생성해 새 권한으로 다시 연다.
+            if granted, !self.lastInputMonitoringGranted, self.settings.enabled {
+                self.monitor.stop()
+                let status = self.monitor.start()
+                appLog.notice("inputMonitoring granted → monitor recreated → \(String(describing: status), privacy: .public)")
             }
+            self.lastInputMonitoringGranted = granted
         }
     }
 }

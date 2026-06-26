@@ -37,8 +37,26 @@ cat > "${APP_DIR}/Contents/Info.plist" <<PLIST
 </plist>
 PLIST
 
-echo "==> ad-hoc 코드 서명"
-codesign --force --deep --sign - "${APP_DIR}"
+# 서명 식별자 선택: 안정적 인증서(Developer ID > Apple Development)가 있으면 사용한다.
+# 안정 인증서로 서명하면 designated requirement가 빌드마다 동일 → 입력 모니터링 권한
+# grant가 리빌드해도 유지된다. 없으면 ad-hoc 폴백(리빌드마다 재승인 필요).
+SIGN_IDENTITY="${KBSND_SIGN_IDENTITY:-}"
+if [ -z "${SIGN_IDENTITY}" ]; then
+    SIGN_IDENTITY=$(security find-identity -p codesigning -v 2>/dev/null \
+        | grep -o '"Developer ID Application: [^"]*"' | head -1 | tr -d '"')
+fi
+if [ -z "${SIGN_IDENTITY}" ]; then
+    SIGN_IDENTITY=$(security find-identity -p codesigning -v 2>/dev/null \
+        | grep -o '"Apple Development: [^"]*"' | head -1 | tr -d '"')
+fi
+
+if [ -n "${SIGN_IDENTITY}" ]; then
+    echo "==> 코드 서명 (안정 인증서: ${SIGN_IDENTITY})"
+    codesign --force --sign "${SIGN_IDENTITY}" "${APP_DIR}"
+else
+    echo "==> 코드 서명 (ad-hoc — 안정 인증서 없음; 리빌드 시 권한 재승인 필요)"
+    codesign --force --deep --sign - "${APP_DIR}"
+fi
 
 echo "==> 완료: ${APP_DIR}"
-echo "실행: open ${APP_DIR}  (첫 실행 시 손쉬운 사용 권한 부여 필요)"
+echo "실행: open ${APP_DIR}  (첫 실행 시 입력 모니터링 권한 부여 필요)"

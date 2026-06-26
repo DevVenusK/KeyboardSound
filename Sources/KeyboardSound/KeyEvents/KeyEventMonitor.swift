@@ -1,5 +1,8 @@
 import CoreGraphics
 import Foundation
+import os
+
+private let eventLog = Logger(subsystem: "com.keyboardsound.app", category: "events")
 
 /// CGEventTap(듣기 전용)으로 전역 키 이벤트를 받아 필터링 후 onEvent로 발행한다.
 final class KeyEventMonitor {
@@ -21,6 +24,10 @@ final class KeyEventMonitor {
         stop()
     }
 
+    /// 주의: 반환된 `.active`는 탭 *생성*에 성공했다는 의미일 뿐, keyDown/keyUp이
+    /// 실제로 들어온다는 보장이 아니다. 입력 모니터링 권한이 없으면 탭은 생성되지만
+    /// 모디파이어(flagsChanged)만 전달되고 키스트로크는 막힌다. 실제 수신 가능 여부는
+    /// `InputPermissions.isInputMonitoringGranted`로 판정한다.
     @discardableResult
     func start() -> Status {
         guard tap == nil else { return status }
@@ -76,6 +83,7 @@ final class KeyEventMonitor {
     private func handle(type: CGEventType, event: CGEvent) {
         // 시스템이 탭을 끈 경우 재활성화.
         if type == .tapDisabledByTimeout || type == .tapDisabledByUserInput {
+            eventLog.error("tap disabled (\(type == .tapDisabledByTimeout ? "timeout" : "userInput", privacy: .public)) — re-enabling")
             if let tap { CGEvent.tapEnable(tap: tap, enable: true) }
             return
         }
@@ -111,6 +119,7 @@ final class KeyEventMonitor {
             previousFlags = currentFlags
         }
         if let result {
+            eventLog.notice("event keyCode=\(result.keyCode, privacy: .public) phase=\(result.phase == .down ? "down" : "up", privacy: .public)")
             onEvent?(result)
         }
     }

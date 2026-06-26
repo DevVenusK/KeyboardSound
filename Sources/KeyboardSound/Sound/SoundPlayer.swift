@@ -1,4 +1,7 @@
 import AVFoundation
+import os
+
+private let audioLog = Logger(subsystem: "com.keyboardsound.app", category: "audio")
 
 /// 버퍼 재생 추상화. 테스트에서 스파이로 대체 가능.
 protocol SoundPlaying: AnyObject {
@@ -25,11 +28,19 @@ final class SoundPlayer: SoundPlaying {
         }
     }
 
-    func start() throws {
-        guard !engine.isRunning else { return }
+    /// 엔진을 (필요 시) 시작한다. 멱등. 성공 여부를 반환하며 실패는 로깅한다.
+    @discardableResult
+    func start() -> Bool {
+        guard !engine.isRunning else { return true }
         engine.prepare()
-        try engine.start()
-        players.forEach { $0.play() }
+        do {
+            try engine.start()
+            players.forEach { $0.play() }
+            return true
+        } catch {
+            audioLog.error("AVAudioEngine start failed: \(error.localizedDescription, privacy: .public)")
+            return false
+        }
     }
 
     func stop() {
@@ -38,10 +49,17 @@ final class SoundPlayer: SoundPlaying {
     }
 
     func play(_ buffer: AVAudioPCMBuffer, volume: Float) {
-        guard engine.isRunning else { return }
+        let wasRunning = engine.isRunning
+        // 엔진이 꺼져 있으면(런치 타이밍/라우트 변경/슬립 복귀 등) 재생 직전에 보장 시작.
+        if !engine.isRunning, !start() {
+            audioLog.error("play: engine not running and start() failed")
+            return
+        }
         let node = players[nextIndex]
         nextIndex = (nextIndex + 1) % players.count
         node.volume = max(0, min(1, volume))
+        if !node.isPlaying { node.play() }
         node.scheduleBuffer(buffer, at: nil, options: [], completionHandler: nil)
+        audioLog.notice("play wasRunning=\(wasRunning, privacy: .public) vol=\(volume, privacy: .public) len=\(buffer.frameLength, privacy: .public)")
     }
 }

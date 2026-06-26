@@ -38,7 +38,7 @@ final class StatusMenuController: NSObject, NSMenuDelegate {
         menu.removeAllItems()
 
         if permissionDenied {
-            let item = NSMenuItem(title: "⚠️ 손쉬운 사용 권한 필요 — 설정 열기",
+            let item = NSMenuItem(title: "⚠️ 입력 모니터링 권한 필요 — 설정 열기",
                                   action: #selector(openPermission), keyEquivalent: "")
             item.target = self
             menu.addItem(item)
