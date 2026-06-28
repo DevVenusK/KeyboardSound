@@ -104,6 +104,19 @@ final class CustomSampleStore: ObservableObject, SampleProviding {
         return dstBuffer
     }
 
-    /// 저장된 경로에서 재디코딩(앱 시작 시). 실패/없음 → buffer = nil. (Task 3에서 구현)
-    func loadPersisted() {}
+    /// 저장된 경로에서 재디코딩(앱 시작 시). 실패/없음 → buffer = nil.
+    func loadPersisted() {
+        guard let path = defaults.string(forKey: Keys.path),
+              FileManager.default.fileExists(atPath: path) else {
+            buffer = nil
+            return
+        }
+        do {
+            buffer = try Self.decode(url: URL(fileURLWithPath: path), to: format)
+            fileName = defaults.string(forKey: Keys.name) ?? URL(fileURLWithPath: path).lastPathComponent
+        } catch {
+            storeLog.error("loadPersisted decode failed: \(error.localizedDescription, privacy: .public)")
+            buffer = nil
+        }
+    }
 }

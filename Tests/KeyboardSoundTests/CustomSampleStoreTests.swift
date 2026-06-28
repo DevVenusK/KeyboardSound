@@ -45,3 +45,38 @@ private func writeFixtureWAV(seconds: Double = 0.1, sampleRate: Double = 48000) 
     let store = CustomSampleStore(format: engineFormat, directory: tempDir(), defaults: ephemeralDefaults())
     #expect(throws: (any Error).self) { try store.importFile(bad) }
 }
+
+@Test func persistsAndReloadsAcrossInstances() throws {
+    let dir = tempDir()
+    let defs = ephemeralDefaults()
+    let src = writeFixtureWAV()
+
+    let store1 = CustomSampleStore(format: engineFormat, directory: dir, defaults: defs)
+    try store1.importFile(src)
+
+    let store2 = CustomSampleStore(format: engineFormat, directory: dir, defaults: defs)
+    #expect(store2.buffer == nil)            // load 전엔 비어있음
+    store2.loadPersisted()
+    #expect(store2.buffer != nil)            // load 후 복원
+    #expect(store2.fileName == "fixture.wav")
+}
+
+@Test func loadPersistedWithNothingIsNil() {
+    let store = CustomSampleStore(format: engineFormat, directory: tempDir(), defaults: ephemeralDefaults())
+    store.loadPersisted()
+    #expect(store.buffer == nil)
+}
+
+@Test func loadPersistedWithMissingFileIsNil() {
+    let dir = tempDir()
+    let defs = ephemeralDefaults()
+    let src = writeFixtureWAV()
+    let store1 = CustomSampleStore(format: engineFormat, directory: dir, defaults: defs)
+    try! store1.importFile(src)
+    // 복사본을 지워 "파일 없음" 상황 재현
+    try! FileManager.default.removeItem(at: dir)
+
+    let store2 = CustomSampleStore(format: engineFormat, directory: dir, defaults: defs)
+    store2.loadPersisted()
+    #expect(store2.buffer == nil)            // 크래시 없이 무음
+}
