@@ -58,6 +58,11 @@ final class StatusMenuController: NSObject, NSMenuDelegate {
             item.state = (settings.selectedSwitchID == preset.id) ? .on : .off
             presetMenu.addItem(item)
         }
+        presetMenu.addItem(.separator())
+        let customItem = NSMenuItem(title: "커스텀 샘플", action: #selector(selectCustom), keyEquivalent: "")
+        customItem.target = self
+        customItem.state = (settings.selectedSwitchID == Preset.customID) ? .on : .off
+        presetMenu.addItem(customItem)
         let presetParent = NSMenuItem(title: "프리셋", action: nil, keyEquivalent: "")
         menu.setSubmenu(presetMenu, for: presetParent)
         menu.addItem(presetParent)
@@ -77,6 +82,10 @@ final class StatusMenuController: NSObject, NSMenuDelegate {
         if let id = sender.representedObject as? String, let preset = Preset.with(id: id) {
             settings.selectSwitch(preset)
         }
+        rebuild()
+    }
+    @objc private func selectCustom() {
+        settings.selectCustom()
         rebuild()
     }
     @objc private func openSettings() { onOpenSettings() }
