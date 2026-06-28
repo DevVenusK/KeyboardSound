@@ -64,6 +64,11 @@ final class Settings: ObservableObject {
         selectedSwitchID = preset.id
     }
 
+    /// 커스텀 샘플 프리셋 선택. (톤/샤프 등은 커스텀 모드에서 미사용.)
+    func selectCustom() {
+        selectedSwitchID = Preset.customID
+    }
+
     /// 현재 스위치의 캐릭터(decay/body/humanization/clickAmount) 소스.
     var currentSwitch: Preset {
         Preset.with(id: selectedSwitchID) ?? .blue
