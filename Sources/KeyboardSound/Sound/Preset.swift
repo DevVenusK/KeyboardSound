@@ -19,6 +19,9 @@ struct Preset: Equatable, Identifiable {
 
     static let all: [Preset] = [.blue, .brown, .red, .topre]
 
+    /// 커스텀 샘플 프리셋 식별자. `Preset.all`에는 포함하지 않는다(합성 4종 불변).
+    static let customID = "custom"
+
     static func with(id: String) -> Preset? {
         all.first { $0.id == id }
     }
