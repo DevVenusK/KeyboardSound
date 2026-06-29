@@ -71,6 +71,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             .sink { [weak self] enabled in self?.setEnabled(enabled) }
             .store(in: &cancellables)
 
+        // 스위치(프리셋) 변경 → 활성 오디오 엔진 전환(합성/커스텀 엔진 동시 가동 방지).
+        // $selectedSwitchID는 willSet 타이밍에 방출되므로 settings.selectedSwitchID 대신
+        // 방출된 새 id를 사용한다(읽으면 아직 옛 값일 수 있음). dropFirst로 초기값은 무시.
+        settings.$selectedSwitchID
+            .dropFirst()
+            .sink { [weak self] id in self?.routeAudio(forSwitchID: id) }
+            .store(in: &cancellables)
+
         if !InputPermissions.isInputMonitoringGranted {
             InputPermissions.requestInputMonitoring()
         }
@@ -87,17 +95,44 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     private func setEnabled(_ enabled: Bool) {
         if enabled {
-            let audioOK = player.start()
+            let audioOK = startEnginesForCurrentMode()
             let status = monitor.start()
             let granted = InputPermissions.isInputMonitoringGranted
             // 탭 생성 성공(.active)이어도 입력 모니터링 권한이 없으면 keyDown은 안 들어온다(거짓 양성).
             // 실제 동작 여부는 탭 상태가 아니라 권한으로 판정한다.
-            appLog.notice("setEnabled(true) inputMonitoring=\(granted, privacy: .public) audioStart=\(audioOK, privacy: .public) tapStatus=\(String(describing: status), privacy: .public)")
+            appLog.notice("setEnabled(true) inputMonitoring=\(granted, privacy: .public) audioStart=\(audioOK, privacy: .public) custom=\(self.settings.selectedSwitchID == Preset.customID, privacy: .public) tapStatus=\(String(describing: status), privacy: .public)")
             menuController?.setPermissionDenied(!granted)
         } else {
             appLog.notice("setEnabled(false)")
             monitor.stop()
             player.stop()
+            samplePlayer.stop()
+        }
+    }
+
+    /// 합성용 SoundPlayer와 커스텀용 SamplePlayer는 **각자 AVAudioEngine**를 갖는다.
+    /// 두 엔진이 동시에 출력 장치를 잡으면 IO 경합으로 소리가 먹먹해지므로(실측 확인),
+    /// 현재 모드에 해당하는 엔진 '하나만' 돌리고 나머지는 멈춘다. start() 성공 여부 반환.
+    @discardableResult
+    private func startEnginesForCurrentMode() -> Bool {
+        if settings.selectedSwitchID == Preset.customID {
+            player.stop()
+            return samplePlayer.start()
+        } else {
+            samplePlayer.stop()
+            return player.start()
+        }
+    }
+
+    /// 스위치 변경 시 활성 엔진을 즉시 전환한다. enabled가 아니면 아무 것도 켜지 않는다.
+    private func routeAudio(forSwitchID id: String) {
+        guard settings.enabled else { return }
+        if id == Preset.customID {
+            player.stop()
+            samplePlayer.start()
+        } else {
+            samplePlayer.stop()
+            player.start()
         }
     }
 
