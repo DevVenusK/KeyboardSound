@@ -7,9 +7,11 @@ private let appLog = Logger(subsystem: "com.keyboardsound.app", category: "app")
 final class AppDelegate: NSObject, NSApplicationDelegate {
     private let settings = Settings()
     private let player = SoundPlayer()
+    private let samplePlayer = SamplePlayer()
     private let monitor = KeyEventMonitor()
 
     private var bank: ClickSoundBank!
+    private var sampleStore: CustomSampleStore!
     private var controller: KeySoundController!
     private var menuController: StatusMenuController!
     private var settingsWindow: SettingsWindowController!
@@ -34,10 +36,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                               weight: settings.weight,
                               ring: settings.ring,
                               preset: settings.currentSwitch)
-        controller = KeySoundController(settings: settings, bank: bank, player: player)
+        sampleStore = CustomSampleStore(format: samplePlayer.format)
+        sampleStore.loadPersisted()
+
+        controller = KeySoundController(settings: settings, bank: bank, player: player,
+                                        sampleStore: sampleStore, samplePlayer: samplePlayer)
         monitor.onEvent = { [weak self] event in self?.controller.handle(event) }
 
-        settingsWindow = SettingsWindowController(settings: settings) { [weak self] in
+        settingsWindow = SettingsWindowController(settings: settings, sampleStore: sampleStore) { [weak self] in
             self?.playTestSound()
         }
         menuController = StatusMenuController(
@@ -74,6 +80,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func regenerateBank() {
+        // 커스텀 모드에선 합성 뱅크를 쓰지 않으므로 재생성 불필요.
+        guard settings.selectedSwitchID != Preset.customID else { return }
         bank.regenerate(tone: settings.tone, sharpness: settings.sharpness, weight: settings.weight, ring: settings.ring, preset: settings.currentSwitch)
     }
 
