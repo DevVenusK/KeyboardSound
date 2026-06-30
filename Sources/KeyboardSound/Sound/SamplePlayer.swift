@@ -25,6 +25,9 @@ final class SamplePlayer: SamplePlaying {
     @discardableResult
     func start() -> Bool {
         guard !engine.isRunning else { return true }
+        // 출력 장치 설정 변경(샘플레이트 등)으로 엔진이 정지하면 노드 연결이 무효화되어
+        // start()만으로는 무음이 된다. 시작 직전에 노드를 다시 잇는다(SoundPlayer와 동일).
+        engine.connect(node, to: engine.mainMixerNode, format: format)
         engine.prepare()
         do {
             try engine.start()

@@ -32,6 +32,12 @@ final class SoundPlayer: SoundPlaying {
     @discardableResult
     func start() -> Bool {
         guard !engine.isRunning else { return true }
+        // 다른 앱(예: 애플뮤직 무손실)이 출력 장치 샘플레이트를 바꾸면 AVAudioEngine이
+        // 정지하고 노드 연결이 무효화된다. 이때 start()만 하면 isRunning=true여도 무음이므로
+        // (실측 확인) 시작 직전에 노드를 mainMixerNode에 다시 잇는다.
+        for node in players {
+            engine.connect(node, to: engine.mainMixerNode, format: format)
+        }
         engine.prepare()
         do {
             try engine.start()
